@@ -33,10 +33,9 @@ jobs:
       run: |
         python -m pip install cibuildwheel==1.10.0
 
-    - name: Install Visual C++ for Python 2.7
+    - name: Install Visual C++ 
       if: startsWith(matrix.os, 'windows')
-      run: |
-        choco install vcpython27 -f -y
+      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Build wheels
       env:
