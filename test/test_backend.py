@@ -330,6 +330,10 @@ def test_func_backends(backend):
         lst_b.append(nx.to_numpy(A))
         lst_name.append('flip')
 
+        A = nx.argmax(Mb)
+        lst_b.append(nx.to_numpy(A))
+        lst_name.append('argmax')
+
         lst_tot.append(lst_b)
 
     lst_np = lst_tot[0]

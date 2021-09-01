@@ -166,6 +166,9 @@ class Backend():
     def flip(self, a, axis=None):
         raise NotImplementedError()
 
+    def argmax(self, a):
+        raise NotImplementedError()
+
 
 class NumpyBackend(Backend):
 
@@ -270,6 +273,9 @@ class NumpyBackend(Backend):
 
     def flip(self, a, axis=None):
         return np.flip(a, axis)
+
+    def argmax(self, a):
+        return np.argmax(a)
 
 
 class JaxBackend(Backend):
@@ -382,6 +388,9 @@ class JaxBackend(Backend):
 
     def flip(self, a, axis=None):
         return jnp.flip(a, axis)
+
+    def argmax(self, a):
+        return jnp.argmax(a)
 
 
 class TorchBackend(Backend):
@@ -546,3 +555,6 @@ class TorchBackend(Backend):
             return torch.flip(a, (axis,))
         else:
             return torch.flip(a, dims=axis)
+
+    def argmax(self, a):
+        return torch.argmax(a)

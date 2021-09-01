@@ -521,29 +521,26 @@ def greenkhorn(a, b, M, reg, numItermax=10000, stopThr=1e-9, verbose=False,
 
     """
 
-    a = np.asarray(a, dtype=np.float64)
-    b = np.asarray(b, dtype=np.float64)
-    M = np.asarray(M, dtype=np.float64)
+    a, b, M = list_to_array(a, b, M)
+
+    nx = get_backend(M, a, b)
 
     if len(a) == 0:
-        a = np.ones((M.shape[0],), dtype=np.float64) / M.shape[0]
+        a = nx.ones((M.shape[0],), type_as=M) / M.shape[0]
     if len(b) == 0:
-        b = np.ones((M.shape[1],), dtype=np.float64) / M.shape[1]
+        b = nx.ones((M.shape[1],), type_as=M) / M.shape[1]
 
     dim_a = a.shape[0]
     dim_b = b.shape[0]
 
-    # Next 3 lines equivalent to K= np.exp(-M/reg), but faster to compute
-    K = np.empty_like(M)
-    np.divide(M, -reg, out=K)
-    np.exp(K, out=K)
+    K = nx.exp(-M / reg)
 
-    u = np.full(dim_a, 1. / dim_a)
-    v = np.full(dim_b, 1. / dim_b)
+    u = nx.full((dim_a,), 1. / dim_a, type_as=K)
+    v = nx.full((dim_b,), 1. / dim_b, type_as=K)
     G = u[:, np.newaxis] * K * v[np.newaxis, :]
 
-    viol = G.sum(1) - a
-    viol_2 = G.sum(0) - b
+    viol = nx.sum(G, axis=1) - a
+    viol_2 = nx.sum(G, axis=0) - b
     stopThr_val = 1
 
     if log:
@@ -552,29 +549,29 @@ def greenkhorn(a, b, M, reg, numItermax=10000, stopThr=1e-9, verbose=False,
         log['v'] = v
 
     for i in range(numItermax):
-        i_1 = np.argmax(np.abs(viol))
-        i_2 = np.argmax(np.abs(viol_2))
-        m_viol_1 = np.abs(viol[i_1])
-        m_viol_2 = np.abs(viol_2[i_2])
-        stopThr_val = np.maximum(m_viol_1, m_viol_2)
+        i_1 = nx.argmax(nx.abs(viol))
+        i_2 = nx.argmax(nx.abs(viol_2))
+        m_viol_1 = nx.abs(viol[i_1])
+        m_viol_2 = nx.abs(viol_2[i_2])
+        stopThr_val = nx.maximum(m_viol_1, m_viol_2)
 
         if m_viol_1 > m_viol_2:
             old_u = u[i_1]
-            u[i_1] = a[i_1] / (K[i_1, :].dot(v))
-            G[i_1, :] = u[i_1] * K[i_1, :] * v
+            new_u = a[i_1] / (K[i_1, :].dot(v))
+            G[i_1, :] = new_u * K[i_1, :] * v
 
-            viol[i_1] = u[i_1] * K[i_1, :].dot(v) - a[i_1]
-            viol_2 += (K[i_1, :].T * (u[i_1] - old_u) * v)
-
+            viol[i_1] = new_u * K[i_1, :].dot(v) - a[i_1]
+            viol_2 += (K[i_1, :].T * (new_u - old_u) * v)
+            u[i_1] = new_u
         else:
             old_v = v[i_2]
-            v[i_2] = b[i_2] / (K[:, i_2].T.dot(u))
-            G[:, i_2] = u * K[:, i_2] * v[i_2]
+            new_v = b[i_2] / (K[:, i_2].T.dot(u))
+            G[:, i_2] = u * K[:, i_2] * new_v
             # aviol = (G@one_m - a)
             # aviol_2 = (G.T@one_n - b)
-            viol += (-old_v + v[i_2]) * K[:, i_2] * u
-            viol_2[i_2] = v[i_2] * K[:, i_2].dot(u) - b[i_2]
-
+            viol += (-old_v + new_v) * K[:, i_2] * u
+            viol_2[i_2] = new_v * K[:, i_2].dot(u) - b[i_2]
+            v[i_2] = new_v
             # print('b',np.max(abs(aviol -viol)),np.max(abs(aviol_2 - viol_2)))
 
         if stopThr_val <= stopThr:
@@ -679,14 +676,14 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
 
     """
 
-    a = np.asarray(a, dtype=np.float64)
-    b = np.asarray(b, dtype=np.float64)
-    M = np.asarray(M, dtype=np.float64)
+    a, b, M = list_to_array(a, b, M)
+
+    nx = get_backend(M, a, b)
 
     if len(a) == 0:
-        a = np.ones((M.shape[0],), dtype=np.float64) / M.shape[0]
+        a = nx.ones((M.shape[0],), type_as=M) / M.shape[0]
     if len(b) == 0:
-        b = np.ones((M.shape[1],), dtype=np.float64) / M.shape[1]
+        b = nx.ones((M.shape[1],), type_as=M) / M.shape[1]
 
     # test if multiple target
     if len(b.shape) > 1:
@@ -706,25 +703,25 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
     # we assume that no distances are null except those of the diagonal of
     # distances
     if warmstart is None:
-        alpha, beta = np.zeros(dim_a), np.zeros(dim_b)
+        alpha, beta = nx.zeros(dim_a, type_as=M), nx.zeros(dim_b, type_as=M)
     else:
         alpha, beta = warmstart
 
     if n_hists:
-        u = np.ones((dim_a, n_hists)) / dim_a
-        v = np.ones((dim_b, n_hists)) / dim_b
+        u = nx.ones((dim_a, n_hists), type_as=M) / dim_a
+        v = nx.ones((dim_b, n_hists), type_as=M) / dim_b
     else:
-        u, v = np.ones(dim_a) / dim_a, np.ones(dim_b) / dim_b
+        u, v = nx.ones(dim_a, type_as=M) / dim_a, nx.ones(dim_b, type_as=M) / dim_b
 
     def get_K(alpha, beta):
         """log space computation"""
-        return np.exp(-(M - alpha.reshape((dim_a, 1))
+        return nx.exp(-(M - alpha.reshape((dim_a, 1))
                         - beta.reshape((1, dim_b))) / reg)
 
     def get_Gamma(alpha, beta, u, v):
         """log space gamma computation"""
-        return np.exp(-(M - alpha.reshape((dim_a, 1)) - beta.reshape((1, dim_b)))
-                      / reg + np.log(u.reshape((dim_a, 1))) + np.log(v.reshape((1, dim_b))))
+        return nx.exp(-(M - alpha.reshape((dim_a, 1)) - beta.reshape((1, dim_b)))
+                      / reg + nx.log(u.reshape((dim_a, 1))) + nx.log(v.reshape((1, dim_b))))
 
     # print(np.min(K))
 
@@ -739,33 +736,35 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
         vprev = v
 
         # sinkhorn update
-        v = b / (np.dot(K.T, u) + 1e-16)
-        u = a / (np.dot(K, v) + 1e-16)
+        v = b / (nx.dot(K.T, u) + 1e-16)
+        u = a / (nx.dot(K, v) + 1e-16)
 
         # remove numerical problems and store them in K
-        if np.abs(u).max() > tau or np.abs(v).max() > tau:
+        if nx.max(nx.abs(u)) > tau or nx.max(nx.abs(v)) > tau:
             if n_hists:
-                alpha, beta = alpha + reg * np.max(np.log(u), 1), beta + reg * np.max(np.log(v))
+                alpha, beta = alpha + reg * nx.max(nx.log(u), 1), beta + reg * nx.max(np.log(v))
             else:
-                alpha, beta = alpha + reg * np.log(u), beta + reg * np.log(v)
+                alpha, beta = alpha + reg * nx.log(u), beta + reg * nx.log(v)
                 if n_hists:
-                    u, v = np.ones((dim_a, n_hists)) / dim_a, np.ones((dim_b, n_hists)) / dim_b
+                    u = nx.ones((dim_a, n_hists), type_as=M) / dim_a
+                    v = nx.ones((dim_b, n_hists), type_as=M) / dim_b
                 else:
-                    u, v = np.ones(dim_a) / dim_a, np.ones(dim_b) / dim_b
+                    u = nx.ones(dim_a, type_as=M) / dim_a
+                    v = nx.ones(dim_b, type_as=M) / dim_b
             K = get_K(alpha, beta)
 
         if cpt % print_period == 0:
             # we can speed up the process by checking for the error only all
             # the 10th iterations
             if n_hists:
-                err_u = abs(u - uprev).max()
-                err_u /= max(abs(u).max(), abs(uprev).max(), 1.)
-                err_v = abs(v - vprev).max()
-                err_v /= max(abs(v).max(), abs(vprev).max(), 1.)
+                err_u = nx.max(nx.abs(u - uprev))
+                err_u /= max(nx.max(nx.abs(u)), nx.max(nx.abs(uprev)), 1.0)
+                err_v = nx.max(nx.abs(v - vprev))
+                err_v /= max(nx.max(nx.abs(v)), nx.max(nx.abs(vprev)), 1.0)
                 err = 0.5 * (err_u + err_v)
             else:
                 transp = get_Gamma(alpha, beta, u, v)
-                err = np.linalg.norm((np.sum(transp, axis=0) - b))
+                err = nx.norm(nx.sum(transp, axis=0) - b)
             if log:
                 log['err'].append(err)
 
@@ -781,7 +780,7 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
         if cpt >= numItermax:
             loop = False
 
-        if np.any(np.isnan(u)) or np.any(np.isnan(v)):
+        if nx.any(nx.isnan(u)) or nx.any(nx.isnan(v)):
             # we have reached the machine precision
             # come back to previous solution and quit loop
             print('Warning: numerical errors at iteration', cpt)
@@ -795,26 +794,26 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
         if n_hists:
             alpha = alpha[:, None]
             beta = beta[:, None]
-        logu = alpha / reg + np.log(u)
-        logv = beta / reg + np.log(v)
+        logu = alpha / reg + nx.log(u)
+        logv = beta / reg + nx.log(v)
         log['logu'] = logu
         log['logv'] = logv
-        log['alpha'] = alpha + reg * np.log(u)
-        log['beta'] = beta + reg * np.log(v)
+        log['alpha'] = alpha + reg * nx.log(u)
+        log['beta'] = beta + reg * nx.log(v)
         log['warmstart'] = (log['alpha'], log['beta'])
         if n_hists:
-            res = np.zeros((n_hists))
+            res = nx.zeros((n_hists,), type_as=M)
             for i in range(n_hists):
-                res[i] = np.sum(get_Gamma(alpha, beta, u[:, i], v[:, i]) * M)
+                res[i] = nx.sum(get_Gamma(alpha, beta, u[:, i], v[:, i]) * M)
             return res, log
 
         else:
             return get_Gamma(alpha, beta, u, v), log
     else:
         if n_hists:
-            res = np.zeros((n_hists))
+            res = nx.zeros((n_hists,), type_as=M)
             for i in range(n_hists):
-                res[i] = np.sum(get_Gamma(alpha, beta, u[:, i], v[:, i]) * M)
+                res[i] = nx.sum(get_Gamma(alpha, beta, u[:, i], v[:, i]) * M)
             return res
         else:
             return get_Gamma(alpha, beta, u, v)
@@ -910,14 +909,14 @@ def sinkhorn_epsilon_scaling(a, b, M, reg, numItermax=100, epsilon0=1e4,
 
     """
 
-    a = np.asarray(a, dtype=np.float64)
-    b = np.asarray(b, dtype=np.float64)
-    M = np.asarray(M, dtype=np.float64)
+    a, b, M = list_to_array(a, b, M)
+
+    nx = get_backend(M, a, b)
 
     if len(a) == 0:
-        a = np.ones((M.shape[0],), dtype=np.float64) / M.shape[0]
+        a = nx.ones((M.shape[0],), type_as=M) / M.shape[0]
     if len(b) == 0:
-        b = np.ones((M.shape[1],), dtype=np.float64) / M.shape[1]
+        b = nx.ones((M.shape[1],), type_as=M) / M.shape[1]
 
     # init data
     dim_a = len(a)
@@ -934,7 +933,7 @@ def sinkhorn_epsilon_scaling(a, b, M, reg, numItermax=100, epsilon0=1e4,
     # we assume that no distances are null except those of the diagonal of
     # distances
     if warmstart is None:
-        alpha, beta = np.zeros(dim_a), np.zeros(dim_b)
+        alpha, beta = nx.zeros(dim_a, type_as=M), nx.zeros(dim_b, type_as=M)
     else:
         alpha, beta = warmstart
 
@@ -964,15 +963,13 @@ def sinkhorn_epsilon_scaling(a, b, M, reg, numItermax=100, epsilon0=1e4,
             # we can speed up the process by checking for the error only all
             # the 10th iterations
             transp = G
-            err = np.linalg.norm(
-                (np.sum(transp, axis=0) - b)) ** 2 + np.linalg.norm((np.sum(transp, axis=1) - a)) ** 2
+            err = nx.norm(nx.sum(transp, axis=0) - b) ** 2 + nx.norm(nx.sum(transp, axis=1) - a) ** 2
             if log:
                 log['err'].append(err)
 
             if verbose:
                 if cpt % (print_period * 10) == 0:
-                    print(
-                        '{:5s}|{:12s}'.format('It.', 'Err') + '\n' + '-' * 19)
+                    print('{:5s}|{:12s}'.format('It.', 'Err') + '\n' + '-' * 19)
                 print('{:5d}|{:8e}|'.format(cpt, err))
 
         if err <= stopThr and cpt > numItermin:
