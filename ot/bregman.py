@@ -19,7 +19,6 @@ import warnings
 
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from scipy.special import logsumexp
 
 from ot.utils import unif, dist, list_to_array
 from .backend import get_backend
@@ -300,12 +299,12 @@ def sinkhorn_knopp(a, b, M, reg, numItermax=1000,
 
     Parameters
     ----------
-    a : ndarray, shape (dim_a,)
+    a : array-like, shape (dim_a,)
         samples weights in the source domain
-    b : ndarray, shape (dim_b,) or ndarray, shape (dim_b, n_hists)
+    b : array-like, shape (dim_b,) or array-like, shape (dim_b, n_hists)
         samples in the target domain, compute sinkhorn with multiple targets
         and fixed M if b is a matrix (return OT loss + dual variables in log)
-    M : ndarray, shape (dim_a, dim_b)
+    M : array-like, shape (dim_a, dim_b)
         loss matrix
     reg : float
         Regularization term >0
@@ -320,7 +319,7 @@ def sinkhorn_knopp(a, b, M, reg, numItermax=1000,
 
     Returns
     -------
-    gamma : ndarray, shape (dim_a, dim_b)
+    gamma : array-like, shape (dim_a, dim_b)
         Optimal transportation matrix for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -471,12 +470,12 @@ def greenkhorn(a, b, M, reg, numItermax=10000, stopThr=1e-9, verbose=False,
 
     Parameters
     ----------
-    a : ndarray, shape (dim_a,)
+    a : array-like, shape (dim_a,)
         samples weights in the source domain
-    b : ndarray, shape (dim_b,) or ndarray, shape (dim_b, n_hists)
+    b : array-like, shape (dim_b,) or array-like, shape (dim_b, n_hists)
         samples in the target domain, compute sinkhorn with multiple targets
         and fixed M if b is a matrix (return OT loss + dual variables in log)
-    M : ndarray, shape (dim_a, dim_b)
+    M : array-like, shape (dim_a, dim_b)
         loss matrix
     reg : float
         Regularization term >0
@@ -489,7 +488,7 @@ def greenkhorn(a, b, M, reg, numItermax=10000, stopThr=1e-9, verbose=False,
 
     Returns
     -------
-    gamma : ndarray, shape (dim_a, dim_b)
+    gamma : array-like, shape (dim_a, dim_b)
         Optimal transportation matrix for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -618,11 +617,11 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
 
     Parameters
     ----------
-    a : ndarray, shape (dim_a,)
+    a : array-like, shape (dim_a,)
         samples weights in the source domain
-    b : ndarray, shape (dim_b,)
+    b : array-like, shape (dim_b,)
         samples in the target domain
-    M : ndarray, shape (dim_a, dim_b)
+    M : array-like, shape (dim_a, dim_b)
         loss matrix
     reg : float
         Regularization term >0
@@ -641,7 +640,7 @@ def sinkhorn_stabilized(a, b, M, reg, numItermax=1000, tau=1e3, stopThr=1e-9,
 
     Returns
     -------
-    gamma : ndarray, shape (dim_a, dim_b)
+    gamma : array-like, shape (dim_a, dim_b)
         Optimal transportation matrix for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -850,11 +849,11 @@ def sinkhorn_epsilon_scaling(a, b, M, reg, numItermax=100, epsilon0=1e4,
 
     Parameters
     ----------
-    a : ndarray, shape (dim_a,)
+    a : array-like, shape (dim_a,)
         samples weights in the source domain
-    b : ndarray, shape (dim_b,)
+    b : array-like, shape (dim_b,)
         samples in the target domain
-    M : ndarray, shape (dim_a, dim_b)
+    M : array-like, shape (dim_a, dim_b)
         loss matrix
     reg : float
         Regularization term >0
@@ -877,7 +876,7 @@ def sinkhorn_epsilon_scaling(a, b, M, reg, numItermax=100, epsilon0=1e4,
 
     Returns
     -------
-    gamma : ndarray, shape (dim_a, dim_b)
+    gamma : array-like, shape (dim_a, dim_b)
         Optimal transportation matrix for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -1033,15 +1032,15 @@ def barycenter(A, M, reg, weights=None, method="sinkhorn", numItermax=10000,
 
     Parameters
     ----------
-    A : ndarray, shape (dim, n_hists)
+    A : array-like, shape (dim, n_hists)
         n_hists training distributions a_i of size dim
-    M : ndarray, shape (dim, dim)
+    M : array-like, shape (dim, dim)
         loss matrix for OT
     reg : float
         Regularization term > 0
     method : str (optional)
         method used for the solver either 'sinkhorn' or 'sinkhorn_stabilized'
-    weights : ndarray, shape (n_hists,)
+    weights : array-like, shape (n_hists,)
         Weights of each histogram a_i on the simplex (barycentric coodinates)
     numItermax : int, optional
         Max number of iterations
@@ -1055,7 +1054,7 @@ def barycenter(A, M, reg, weights=None, method="sinkhorn", numItermax=10000,
 
     Returns
     -------
-    a : (dim,) ndarray
+    a : (dim,) array-like
         Wasserstein barycenter
     log : dict
         log dictionary return only if log==True in parameters
@@ -1101,13 +1100,13 @@ def barycenter_sinkhorn(A, M, reg, weights=None, numItermax=1000,
 
     Parameters
     ----------
-    A : ndarray, shape (dim, n_hists)
+    A : array-like, shape (dim, n_hists)
         n_hists training distributions a_i of size dim
-    M : ndarray, shape (dim, dim)
+    M : array-like, shape (dim, dim)
         loss matrix for OT
     reg : float
         Regularization term > 0
-    weights : ndarray, shape (n_hists,)
+    weights : array-like, shape (n_hists,)
         Weights of each histogram a_i on the simplex (barycentric coodinates)
     numItermax : int, optional
         Max number of iterations
@@ -1121,7 +1120,7 @@ def barycenter_sinkhorn(A, M, reg, weights=None, numItermax=1000,
 
     Returns
     -------
-    a : (dim,) ndarray
+    a : (dim,) array-like
         Wasserstein barycenter
     log : dict
         log dictionary return only if log==True in parameters
@@ -1201,15 +1200,15 @@ def barycenter_stabilized(A, M, reg, tau=1e10, weights=None, numItermax=1000,
 
     Parameters
     ----------
-    A : ndarray, shape (dim, n_hists)
+    A : array-like, shape (dim, n_hists)
         n_hists training distributions a_i of size dim
-    M : ndarray, shape (dim, dim)
+    M : array-like, shape (dim, dim)
         loss matrix for OT
     reg : float
         Regularization term > 0
     tau : float
         thershold for max value in u or v for log scaling
-    weights : ndarray, shape (n_hists,)
+    weights : array-like, shape (n_hists,)
         Weights of each histogram a_i on the simplex (barycentric coodinates)
     numItermax : int, optional
         Max number of iterations
@@ -1223,7 +1222,7 @@ def barycenter_stabilized(A, M, reg, tau=1e10, weights=None, numItermax=1000,
 
     Returns
     -------
-    a : (dim,) ndarray
+    a : (dim,) array-like
         Wasserstein barycenter
     log : dict
         log dictionary return only if log==True in parameters
@@ -1330,11 +1329,11 @@ def convolutional_barycenter2d(A, reg, weights=None, numItermax=10000,
 
     Parameters
     ----------
-    A : ndarray, shape (n_hists, width, height)
+    A : array-like, shape (n_hists, width, height)
         n distributions (2D images) of size width x height
     reg : float
         Regularization term >0
-    weights : ndarray, shape (n_hists,)
+    weights : array-like, shape (n_hists,)
         Weights of each image on the simplex (barycentric coodinates)
     numItermax : int, optional
         Max number of iterations
@@ -1349,7 +1348,7 @@ def convolutional_barycenter2d(A, reg, weights=None, numItermax=10000,
 
     Returns
     -------
-    a : ndarray, shape (width, height)
+    a : array-like, shape (width, height)
         2D Wasserstein barycenter
     log : dict
         log dictionary return only if log==True in parameters
@@ -1454,15 +1453,15 @@ def unmix(a, D, M, M0, h0, reg, reg0, alpha, numItermax=1000,
 
     Parameters
     ----------
-    a : ndarray, shape (dim_a)
+    a : array-like, shape (dim_a)
         observed distribution (histogram, sums to 1)
-    D : ndarray, shape (dim_a, n_atoms)
+    D : array-like, shape (dim_a, n_atoms)
         dictionary matrix
-    M : ndarray, shape (dim_a, dim_a)
+    M : array-like, shape (dim_a, dim_a)
         loss matrix
-    M0 : ndarray, shape (n_atoms, dim_prior)
+    M0 : array-like, shape (n_atoms, dim_prior)
         loss matrix
-    h0 : ndarray, shape (n_atoms,)
+    h0 : array-like, shape (n_atoms,)
         prior on the estimated unmixing h
     reg : float
         Regularization term >0 (Wasserstein data fitting)
@@ -1482,7 +1481,7 @@ def unmix(a, D, M, M0, h0, reg, reg0, alpha, numItermax=1000,
 
     Returns
     -------
-    h : ndarray, shape (n_atoms,)
+    h : array-like, shape (n_atoms,)
         Wasserstein barycenter
     log : dict
         log dictionary return only if log==True in parameters
@@ -1571,11 +1570,11 @@ def jcpot_barycenter(Xs, Ys, Xt, reg, metric='sqeuclidean', numItermax=100,
 
     Parameters
     ----------
-    Xs : list of K np.ndarray(nsk,d)
+    Xs : list of K array-like(nsk,d)
         features of all source domains' samples
-    Ys : list of K np.ndarray(nsk,)
+    Ys : list of K array-like(nsk,)
         labels of all source domains' samples
-    Xt : np.ndarray (nt,d)
+    Xt : array-like (nt,d)
         samples in the target domain
     reg : float
         Regularization term > 0
@@ -1592,7 +1591,7 @@ def jcpot_barycenter(Xs, Ys, Xt, reg, metric='sqeuclidean', numItermax=100,
 
     Returns
     -------
-    h : (C,) ndarray
+    h : (C,) array-like
         proportion estimation in the target domain
     log : dict
         log dictionary return only if log==True in parameters
@@ -1630,7 +1629,7 @@ def jcpot_barycenter(Xs, Ys, Xt, reg, metric='sqeuclidean', numItermax=100,
         dom = {}
         nsk = Xs[d].shape[0]  # get number of elements for this domain
         dom['nbelem'] = nsk
-        classes = nx.unique(Ys[d]) # get number of classes for this domain
+        classes = nx.unique(Ys[d])  # get number of classes for this domain
 
         # format classes to start from 0 for convenience
         if nx.min(classes) != 0:
@@ -1731,15 +1730,15 @@ def empirical_sinkhorn(X_s, X_t, reg, a=None, b=None, metric='sqeuclidean',
 
     Parameters
     ----------
-    X_s : ndarray, shape (n_samples_a, dim)
+    X_s : array-like, shape (n_samples_a, dim)
         samples in the source domain
-    X_t : ndarray, shape (n_samples_b, dim)
+    X_t : array-like, shape (n_samples_b, dim)
         samples in the target domain
     reg : float
         Regularization term >0
-    a : ndarray, shape (n_samples_a,)
+    a : array-like, shape (n_samples_a,)
         samples weights in the source domain
-    b : ndarray, shape (n_samples_b,)
+    b : array-like, shape (n_samples_b,)
         samples weights in the target domain
     numItermax : int, optional
         Max number of iterations
@@ -1759,7 +1758,7 @@ def empirical_sinkhorn(X_s, X_t, reg, a=None, b=None, metric='sqeuclidean',
 
     Returns
     -------
-    gamma : ndarray, shape (n_samples_a, n_samples_b)
+    gamma : array-like, shape (n_samples_a, n_samples_b)
         Regularized optimal transportation matrix for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -1893,15 +1892,15 @@ def empirical_sinkhorn2(X_s, X_t, reg, a=None, b=None, metric='sqeuclidean', num
 
     Parameters
     ----------
-    X_s : ndarray, shape (n_samples_a, dim)
+    X_s : array-like, shape (n_samples_a, dim)
         samples in the source domain
-    X_t : ndarray, shape (n_samples_b, dim)
+    X_t : array-like, shape (n_samples_b, dim)
         samples in the target domain
     reg : float
         Regularization term >0
-    a : ndarray, shape (n_samples_a,)
+    a : array-like, shape (n_samples_a,)
         samples weights in the source domain
-    b : ndarray, shape (n_samples_b,)
+    b : array-like, shape (n_samples_b,)
         samples weights in the target domain
     numItermax : int, optional
         Max number of iterations
@@ -1921,7 +1920,7 @@ def empirical_sinkhorn2(X_s, X_t, reg, a=None, b=None, metric='sqeuclidean', num
 
     Returns
     -------
-    W : (n_hists) ndarray or float
+    W : (n_hists) array-like or float
         Optimal transportation loss for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -2045,15 +2044,15 @@ def empirical_sinkhorn_divergence(X_s, X_t, reg, a=None, b=None, metric='sqeucli
 
     Parameters
     ----------
-    X_s : ndarray, shape (n_samples_a, dim)
+    X_s : array-like, shape (n_samples_a, dim)
         samples in the source domain
-    X_t : ndarray, shape (n_samples_b, dim)
+    X_t : array-like, shape (n_samples_b, dim)
         samples in the target domain
     reg : float
         Regularization term >0
-    a : ndarray, shape (n_samples_a,)
+    a : array-like, shape (n_samples_a,)
         samples weights in the source domain
-    b : ndarray, shape (n_samples_b,)
+    b : array-like, shape (n_samples_b,)
         samples weights in the target domain
     numItermax : int, optional
         Max number of iterations
@@ -2066,7 +2065,7 @@ def empirical_sinkhorn_divergence(X_s, X_t, reg, a=None, b=None, metric='sqeucli
 
     Returns
     -------
-    W : (1,) ndarray
+    W : (1,) array-like
         Optimal transportation symmetrized loss for the given parameters
     log : dict
         log dictionary return only if log==True in parameters
@@ -2143,23 +2142,23 @@ def screenkhorn(a, b, M, reg, ns_budget=None, nt_budget=None, uniform=False, res
 
     Parameters
     ----------
-    a : `numpy.ndarray`, shape=(ns,)
+    a : array-like, shape=(ns,)
         samples weights in the source domain
 
-    b : `numpy.ndarray`, shape=(nt,)
+    b : array-like, shape=(nt,)
         samples weights in the target domain
 
-    M : `numpy.ndarray`, shape=(ns, nt)
+    M : array-like, shape=(ns, nt)
         Cost matrix
 
     reg : `float`
         Level of the entropy regularisation
 
-    ns_budget : `int`, deafult=None
+    ns_budget : `int`, default=None
         Number budget of points to be keeped in the source domain
         If it is None then 50% of the source sample points will be keeped
 
-    nt_budget : `int`, deafult=None
+    nt_budget : `int`, default=None
         Number budget of points to be keeped in the target domain
         If it is None then 50% of the target sample points will be keeped
 
@@ -2192,7 +2191,7 @@ def screenkhorn(a, b, M, reg, ns_budget=None, nt_budget=None, uniform=False, res
 
     Returns
     -------
-    gamma : `numpy.ndarray`, shape=(ns, nt)
+    gamma : array-like, shape=(ns, nt)
         Screened optimal transportation matrix for the given parameters
 
     log : `dict`, default=False
